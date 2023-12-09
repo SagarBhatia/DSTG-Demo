@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Frontend Page</title>
+    <!-- Include D3.js library -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Include Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }
+
+      #graph-container {
+        width: 48%;
+        height: 300px;
+        margin: 10px;
+      }
+
+      #tree-container {
+        width: 48%;
+        height: 300px;
+        margin: 10px;
+        position: relative;
+      }
+
+      .tree-progress {
+        position: absolute;
+        width: 50%;
+        height: 20px;
+        background-color: #f0f0f0;
+        top: 0;
+        left: 0;
+      }
+      .progress-bar {
+        height: 100%;
+        background-color: #50a765;
+      }
+      .tooltip {
+        position: absolute;
+        background-color: #333;
+        color: #fff;
+        padding: 8px;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      #table-container {
+        width: 100%;
+        margin: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Graph Container -->
+    <div id="graph-container">
+      <canvas id="barGraph"></canvas>
+    </div>
+
+    <!-- Tree Container -->
+    <div id="tree-container">
+      <!-- Progress Bar for Tree 1 -->
+      <div class="tree-progress" style="top: 0"></div>
+      <!-- Tree GUI will be generated dynamically using D3.js -->
+    </div>
+
+    <!-- Table Container -->
+    <div id="table-container">
+      <table border="1">
+        <thead>
+          <tr>
+            <th>UAV ID</th>
+            <th>SubGoals</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <!-- Table rows will be generated dynamically using JavaScript -->
+        </tbody>
+      </table>
+    </div>
+    <div id="table2-container">
+      <h2>Table of Current Beliefs</h2>
+      <table border="1">
+        <thead>
+          <tr>
+            <th>Belief</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody id="table2-body">
+          <!-- Table rows will be generated dynamically using JavaScript -->
+        </tbody>
+      </table>
+    </div>
+    <div id="intention-queue-table-container">
+      <h2>Intention Queue</h2>
+      <table border="1">
+        <thead>
+          <tr>
+            <th>Intention ID</th>
+            <th>Probability</th>
+            <th>Stack</th>
+          </tr>
+        </thead>
+        <tbody id="intention-queue-table-body">
+          <!-- Table rows will be generated dynamically using JavaScript -->
+        </tbody>
+      </table>
+    </div>
+
+    <script>
+      const jsonData = {
+        goals: [
+          {
+            id: "G1",
+            description: "Goal 1",
+            numSubgoals: 3,
+          },
+          {
+            id: "G2",
+            description: "Goal 2",
+            numSubgoals: 3,
+          },
+          {
+            id: "G3",
+            description: "Goal 3",
+            numSubgoals: 3,
+          },
+          {
+            id: "G4",
+            description: "Goal 4",
+            numSubgoals: 3,
+          },
+        ],
+        currentBeliefs: {
+          belief1: "value1",
+          belief2: "value2",
+          belief3: "value3",
+        },
+        intentionQueue: [
+          {
+            intentionId: 1,
+            goalId: "G1",
+            probability: 0.2,
+            stack: [
+              {
+                triggerEvent: "SG11",
+                planBody: [
+                  {
+                    id: 1,
+                    description: "A1",
+                    responsible: "UAV1",
+                    type: "action",
+                  },
+                  {
+                    id: 2,
+                    description: "A2",
+                    responsible: "UAV1",
+                    type: "action",
+                  },
+                ],
+              },
+              {
+                triggerEvent: "G1",
+                planBody: [
+                  {
+                    id: 1,
+                    description: "SG11",
+                    responsible: "UAV1",
+                    type: "subgoal",
+                  },
+                  {
+                    id: 2,
+                    description: "SG12",
+                    responsible: "UAV2",
+                    type: "subgoal",
+                  },
+                  {
+                    id: 3,
+                    description: "SG13",
+                    responsible: "UAV3",
+                    type: "subgoal",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            intentionId: 2,
+            goalId: "G2",
+            probability: 0.6,
+            stack: [
+              {
+                triggerEvent: "SG211",
+                planBody: [
+                  {
+                    id: 1,
+                    description: "B1",
+                    responsible: "UAV2",
+                    type: "action",
+                  },
+                  {
+                    id: 2,
+                    description: "B2",
+                    responsible: "UAV3",
+                    type: "action",
+                  },
+                ],
+              },
+              {
+                triggerEvent: "SG21",
+                planBody: [
+                  {
+                    id: 1,
+                    description: "SG211",
+                    responsible: "UAV2",
+                    type: "subgoal",
+                  },
+                ],
+              },
+              {
+                triggerEvent: "G2",
+                planBody: [
+                  {
+                    id: 1,
+                    description: "SG21",
+                    responsible: "UAV2",
+                    type: "subgoal",
+                  },
+                  {
+                    id: 2,
+                    description: "SG22",
+                    responsible: "UAV3",
+                    type: "subgoal",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            intentionId: 4,
+            goalId: "G4",
+            probability: 0.3,
+            stack: [
+              {
+                triggerEvent: "SG11",
+                planBody: [
+                  {
+                    id: 1,
+                    description: "A1",
+                    responsible: "UAV1",
+                    type: "action",
+                  },
+                  {
+                    id: 2,
+                    description: "A2",
+                    responsible: "UAV1",
+                    type: "action",
+                  },
+                ],
+              },
+              {
+                triggerEvent: "G1",
+                planBody: [
+                  {
+                    id: 1,
+                    description: "SG11",
+                    responsible: "UAV1",
+                    type: "subgoal",
+                  },
+                  {
+                    id: 2,
+                    description: "SG12",
+                    responsible: "UAV2",
+                    type: "subgoal",
+                  },
+                  {
+                    id: 3,
+                    description: "SG13",
+                    responsible: "UAV3",
+                    type: "subgoal",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            intentionId: 3,
+            goalId: "G3",
+            probability: 0.2,
+            stack: [
+              {
+                triggerEvent: "SG311",
+                planBody: [
+                  {
+                    id: 1,
+                    description: "C1",
+                    responsible: "UAV2",
+                    type: "action",
+                  },
+                  {
+                    id: 2,
+                    description: "C2",
+                    responsible: "UAV3",
+                    type: "action",
+                  },
+                ],
+              },
+              {
+                triggerEvent: "SG31",
+                planBody: [
+                  {
+                    id: 1,
+                    description: "SG311",
+                    responsible: "UAV2",
+                    type: "subgoal",
+                  },
+                ],
+              },
+              {
+                triggerEvent: "G3",
+                planBody: [
+                  {
+                    id: 1,
+                    description: "SG31",
+                    responsible: "UAV2",
+                    type: "subgoal",
+                  },
+                  {
+                    id: 2,
+                    description: "SG32",
+                    responsible: "UAV3",
+                    type: "subgoal",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+      // Sample data for the graph
+      const graphData = {
+        labels: jsonData.intentionQueue.map(
+          (intention) => `Intension ID ${intention.intentionId}`
+        ),
+        datasets: [
+          {
+            label: "Probability",
+            data: jsonData.intentionQueue.map(
+              (intention) => intention.probability
+            ),
+            backgroundColor: "rgba(75, 192, 192, 0.2)",
+            borderColor: "rgba(75, 192, 192, 1)",
+            borderWidth: 1,
+          },
+        ],
+      };
+
+      // Sample data for the tree
+      const treeData = [
+        { id: "G1", progress: 35, children: ["SG11", "SG12", "SG13"] },
+        { id: "G2", progress: 80, children: ["SG21", "SG22", "SG23"] },
+        // More tree data can be added dynamically
+      ];
+
+      // Sample data for the table
+      const tableData = [
+        { uavId: "UAV1", subGoals: ["SG11", "SG12"] },
+        { uavId: "UAV2", subGoals: ["SG21", "SG23"] },
+        // More table data can be added dynamically
+      ];
+
+      // Function to create the bar graph
+      function createBarGraph() {
+        const ctx = document.getElementById("barGraph").getContext("2d");
+        const barGraph = new Chart(ctx, {
+          type: "bar",
+          data: graphData,
+          options: {
+            scales: {
+              x: { type: "category", labels: graphData.labels },
+              y: { beginAtZero: true },
+            },
+            onClick: handleBarClick,
+          },
+        });
+
+        function handleBarClick(event, elements) {
+          if (elements && elements.length > 0) {
+            const index = elements[0].index;
+            const clickedIntention = jsonData.intentionQueue[index];
+            const message = `Clicked on Intention ID ${clickedIntention.intentionId}\nGoal ID: ${clickedIntention.goalId}\nProbability: ${clickedIntention.probability}`;
+            // alert(message);
+            createTree2(clickedIntention.goalId);
+          }
+        }
+      }
+
+      //my function start
+
+      //   function convertToTree(intention) {
+      //     return {
+      //       name: intention.goalId,
+      //       children: intention.stack.map((stackItem) => ({
+      //         name: stackItem.triggerEvent,
+      //       })),
+      //     };
+      //   }
+
+      function createTree2(id) {
+        console.log(id, "id");
+        // const intentionQueue = jsonData.intentionQueue.map((_el) => {
+        //   console.log(_el, "vimal"),
+        //     _el.stack.map((_item) => {
+        //       _item.triggerEvent;
+        //       console.log(_item, "_item"),
+        //         _item.planBody.map((_value) => {
+        //           jsonData.intentionQueue?.stack?.map((_check) => {
+        //             if (_check.triggerEvent === _value.description) {
+        //               console.log(_value, "_value");
+        //             }
+        //           });
+        //         });
+        //     });
+        // });
+
+        // const part = jsonData.intentionQueue
+        //   .filter((intention) => intention.goalId === id)
+        //   .map((intention) => intention.stack.length)[0];
+
+        // const total = jsonData.goals
+        //   .filter((gols) => gols.id === id)
+        //   .map((_el) => _el.numSubgoals);
+        // console.log(part, total[0], "prograss");
+        // const percentage = ((part / total[0]) * 100).toString() + "%";
+
+        const calculatePart = (intentionQueue, goalId) => {
+          const matchingIntentions = intentionQueue.filter(
+            (intention) => intention.goalId === goalId
+          );
+          return matchingIntentions.length > 0
+            ? matchingIntentions[0].stack.length
+            : 0;
+        };
+
+        // Function to calculate total value
+        const calculateTotal = (goals, goalId) => {
+          const matchingGoal = goals.find((goal) => goal.id === goalId);
+          return matchingGoal ? matchingGoal.numSubgoals : 0;
+        };
+
+        // Replace 'id' with the actual goalId you are interested in
+
+        // Calculate part and total values
+        const part = calculatePart(jsonData.intentionQueue, id);
+        const total = calculateTotal(jsonData.goals, id);
+
+        // Calculate percentage
+        const percentage =
+          total !== 0 ? ((part / total) * 100).toFixed(2) + "%" : "0%";
+
+        // Log or use the calculated values
+        console.log(part, total, percentage, "progress");
+
+        console.log(percentage, "percentage");
+        const d3TreeData = jsonData.intentionQueue.map((intention) => {
+          const { goalId, stack } = intention;
+
+          const children = stack.map((stackItem) => {
+            const { triggerEvent, planBody } = stackItem;
+
+            const subgoals = planBody
+              .filter((bodyItem) => {
+                return bodyItem.type === "action";
+              })
+              .map((bodyItem) => {
+                const { id, description, type } = bodyItem;
+                return { name: description, id, type };
+              });
+
+            return { name: triggerEvent, children: subgoals };
+          });
+
+          return { name: goalId, children };
+        });
+
+        const filteredD3TreeData = d3TreeData.filter(
+          (node) => node.name === id
+        );
+
+        console.log(filteredD3TreeData);
+
+        console.log(filteredD3TreeData, "filteredD3TreeData");
+
+        // Set up the D3 tree layout
+
+        const treeData2 = jsonData.intentionQueue
+          .filter((intention) => intention.goalId === id)
+          .map((intention) => ({
+            name: intention.goalId,
+            children: intention.stack.map((stackItem) => ({
+              name: stackItem.triggerEvent,
+              description: stackItem.planBody.map(
+                (planItem) => planItem.description
+              ),
+            })),
+          }));
+
+        const treeContainer = document.getElementById("tree-container");
+        // Clear existing content in the tree container
+        treeContainer.innerHTML = "";
+
+        const tree = d3.tree().size([300, 300]);
+        const rootData = { name: percentage, children: filteredD3TreeData }; // Added a root node
+
+        const root = d3.hierarchy(rootData);
+
+        tree(root);
+
+        // Draw Progress Bar for Tree 1
+        const progressBar1 = document.createElement("div");
+        progressBar1.classList.add("tree-progress");
+        treeContainer.appendChild(progressBar1);
+
+        const progressBar1Fill = document.createElement("div");
+        progressBar1Fill.classList.add("progress-bar");
+        progressBar1Fill.style.width = percentage;
+        progressBar1.appendChild(progressBar1Fill);
+
+        const svg = d3
+          .select(treeContainer)
+          .append("svg")
+          .attr("width", 400)
+          .attr("height", 400);
+
+        const g = svg.append("g").attr("transform", "translate(50,50)");
+
+        // Draw lines for all links
+        g.selectAll("line")
+          .data(root.links())
+          .enter()
+          .append("line")
+          .attr("x1", (d) => d.source.x)
+          .attr("y1", (d) => d.source.y)
+          .attr("x2", (d) => d.target.x)
+          .attr("y2", (d) => d.target.y)
+          .attr("stroke", "black");
+
+        // Draw circles for all nodes
+        g.selectAll("circle")
+          .data(root.descendants())
+          .enter()
+          .append("circle")
+          .attr("cx", (d) => d.x)
+          .attr("cy", (d) => d.y)
+          .attr("r", 15)
+          .attr("fill", "#add8e6")
+          .on("mouseover", function (event, d) {
+            // Check if the circle is the last one
+            const isLastCircle = d.children === undefined;
+
+            if (isLastCircle) {
+              // Apply your hover effect here
+              function isDescriptionPresent(selectedDescription) {
+                return jsonData.intentionQueue.some((intention) =>
+                  intention.stack.some((stackItem) =>
+                    stackItem.planBody.some(
+                      (planItem) =>
+                        planItem.description === selectedDescription ||
+                        stackItem.triggerEvent === selectedDescription
+                    )
+                  )
+                );
+              }
+
+              // Example usage
+              const values = d.data.name;
+              const isPresent = isDescriptionPresent(values);
+
+              if (isPresent) {
+                // Create a tooltip element
+                const tooltip = document.createElement("div");
+                tooltip.classList.add("tooltip");
+
+                // Extract description and responsible values using reduce
+                const tooltipValues = jsonData.intentionQueue.reduce(
+                  (acc, intention) => {
+                    const matchingStackItem = intention.stack.find(
+                      (stackItem) =>
+                        stackItem.planBody.some(
+                          (planItem) => planItem.description === values
+                        )
+                    );
+
+                    if (matchingStackItem) {
+                      acc.push(
+                        ...matchingStackItem.planBody
+                          .filter((planItem) => planItem.description === values)
+                          .map((planItem) => {
+                            return {
+                              description: planItem.description,
+                              responsible: planItem.responsible,
+                            };
+                          })
+                      );
+                    }
+
+                    return acc;
+                  },
+                  []
+                );
+
+                console.log(tooltipValues, "tooltipValues");
+
+                // Build the tooltip content
+                const tooltipContent = tooltipValues
+                  .map((item) => ` ${item.responsible}`)
+                  .join(", ");
+
+                tooltip.textContent = tooltipContent;
+
+                // Position the tooltip
+                const rect = this.getBoundingClientRect();
+                tooltip.style.left = rect.left + window.scrollX + "px";
+                tooltip.style.top = rect.top + window.scrollY - 30 + "px"; // Adjust as needed
+
+                // Append the tooltip to the body
+                document.body.appendChild(tooltip);
+
+                // Remove the tooltip when the mouse leaves
+                this.addEventListener("mouseout", function () {
+                  document.body.removeChild(tooltip);
+                });
+              }
+            }
+          });
+
+        // Draw text labels for all nodes
+        g.selectAll("text")
+          .data(root.descendants())
+          .enter()
+          .append("text")
+          .attr("x", (d) => d.x)
+          .attr("y", (d) => d.y)
+          .attr("dy", "0.31em")
+          .attr("text-anchor", "middle")
+          .text((d) => d.data.name);
+      }
+      // Call the function to create the tree
+      // createTree();
+
+      //end
+      // Function to create the tree using D3.js
+      // function createTree() {
+      //   const treeContainer = document.getElementById("tree-container");
+
+      //   const tree = d3.tree().size([300, 300]);
+      //   const root = d3.hierarchy({ children: treeData });
+
+      //   tree(root);
+
+      //   // Draw Progress Bar for Tree 1
+      //   const progressBar1 = document.createElement("div");
+      //   progressBar1.classList.add("tree-progress");
+      //   treeContainer.appendChild(progressBar1);
+
+      //   const progressBar1Fill = document.createElement("div");
+      //   progressBar1Fill.classList.add("progress-bar");
+      //   progressBar1Fill.style.width = `${treeData[0].progress}%`;
+      //   progressBar1.appendChild(progressBar1Fill);
+
+      //   const svg = d3
+      //     .select(treeContainer)
+      //     .append("svg")
+      //     .attr("width", 400)
+      //     .attr("height", 400);
+      //   const g = svg.append("g").attr("transform", "translate(50,50)");
+
+      //   // Draw lines
+      //   g.selectAll("line")
+      //     .data(root.links())
+      //     .enter()
+      //     .append("line")
+      //     .attr("x1", (d) => d.source.x)
+      //     .attr("y1", (d) => d.source.y)
+      //     .attr("x2", (d) => d.target.x)
+      //     .attr("y2", (d) => d.target.y)
+      //     .attr("stroke", "black");
+
+      //   // Draw circles
+      //   g.selectAll("circle")
+      //     .data(root.descendants())
+      //     .enter()
+      //     .append("circle")
+      //     .attr("cx", (d) => d.x)
+      //     .attr("cy", (d) => d.y)
+      //     .attr("r", 10)
+      //     .attr("fill", "#add8e6"); // Light blue color
+
+      //   // Draw text labels
+      //   g.selectAll("text")
+      //     .data(root.descendants())
+      //     .enter()
+      //     .append("text")
+      //     .attr("x", (d) => d.x)
+      //     .attr("y", (d) => d.y)
+      //     .attr("dy", "0.31em")
+      //     .attr("text-anchor", "middle")
+      //     .text((d) => d.data.id);
+      // }
+
+      // Function to create the table
+      function createTable() {
+        const tableBody = document.getElementById("table-body");
+
+        tableData.forEach((row) => {
+          const tableRow = document.createElement("tr");
+          const uavIdCell = document.createElement("td");
+          const subGoalsCell = document.createElement("td");
+
+          uavIdCell.textContent = row.uavId;
+          subGoalsCell.textContent = row.subGoals.join(", ");
+
+          tableRow.appendChild(uavIdCell);
+          tableRow.appendChild(subGoalsCell);
+
+          tableBody.appendChild(tableRow);
+        });
+      }
+
+      function createTable2() {
+        const tableBody = document.getElementById("table2-body");
+        const currentBeliefs = jsonData.currentBeliefs;
+        console.log("In Create TABLE");
+        // Fetch data from the local JSON file
+        tableBody.innerHTML = "";
+
+        // Loop through currentBeliefs and create table rows
+        for (const belief in currentBeliefs) {
+          if (currentBeliefs.hasOwnProperty(belief)) {
+            const tableRow = document.createElement("tr");
+            const beliefCell = document.createElement("td");
+            const valueCell = document.createElement("td");
+
+            beliefCell.textContent = belief;
+            valueCell.textContent = currentBeliefs[belief];
+
+            tableRow.appendChild(beliefCell);
+            tableRow.appendChild(valueCell);
+
+            tableBody.appendChild(tableRow);
+          }
+        }
+      }
+      function createIntentionQueueTable() {
+        const tableBody = document.getElementById("intention-queue-table-body");
+
+        // Create a table row for each intention in the intentionQueue
+        jsonData.intentionQueue.forEach((intention) => {
+          const tableRow = document.createElement("tr");
+
+          // Intention ID column
+          const intentionIdCell = document.createElement("td");
+          intentionIdCell.textContent = intention.intentionId;
+          tableRow.appendChild(intentionIdCell);
+
+          // Probability column
+          const probabilityCell = document.createElement("td");
+          probabilityCell.textContent = intention.probability;
+          tableRow.appendChild(probabilityCell);
+
+          // Stack column
+          const stackCell = document.createElement("td");
+          const formattedStack = formatStack(intention.stack);
+          stackCell.textContent = formattedStack;
+          tableRow.appendChild(stackCell);
+
+          // Append the table row to the table body
+          tableBody.appendChild(tableRow);
+        });
+      }
+
+      // Helper function to format the stack
+      function formatStack(stack) {
+        return stack
+          .map((stackItem) => {
+            const planBodyDescriptions = stackItem.planBody
+              .map((bodyItem) => {
+                return `${bodyItem.description} (${bodyItem.responsible})`;
+              })
+              .join("; ");
+
+            return `${stackItem.triggerEvent} <- ${planBodyDescriptions}`;
+          })
+          .join(", ");
+      }
+
+      // Call the createIntentionQueueTable function to populate the table
+      createIntentionQueueTable();
+      // Call the createTable2 function to populate the table
+
+      //function createTable2() {
+      //    const tableBody = document.getElementById('table2-body');
+
+      // Fetch data from the local JSON file
+      //    fetch('path/to/your/local/data.json')
+      //        .then(response => response.json())
+      //        .then(jsonData => {
+      //            const currentBeliefs = jsonData.currentBeliefs;
+
+      // Clear existing table rows
+      //            tableBody.innerHTML = '';
+
+      // Loop through currentBeliefs and create table rows
+      //            for (const belief in currentBeliefs) {
+      //                if (currentBeliefs.hasOwnProperty(belief)) {
+      //                    const tableRow = document.createElement('tr');
+      //                    const beliefCell = document.createElement('td');
+      //                    const valueCell = document.createElement('td');
+
+      //                    beliefCell.textContent = belief;
+      //                    valueCell.textContent = currentBeliefs[belief];
+
+      //                    tableRow.appendChild(beliefCell);
+      //                    tableRow.appendChild(valueCell);
+
+      //                    tableBody.appendChild(tableRow);
+      //                }
+      //            }
+      //        })
+      //        .catch(error => {
+      //            console.error('Error fetching data:', error);
+      //        });
+      //}
+      // Call the functions to create the components
+      createBarGraph();
+      createTree();
+      // createTree();
+      createTable();
+      createTable2();
+    </script>
+  </body>
+</html>
