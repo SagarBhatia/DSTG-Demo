@@ -1,849 +1,748 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Frontend Page</title>
-    <!-- Include D3.js library -->
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <!-- Include Chart.js library -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Frontend Page</title>
+   <!-- Include D3.js library -->
+   <script src="https://d3js.org/d3.v7.min.js"></script>
+   <!-- Include Chart.js library -->
+   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+   <style>
       body {
-        font-family: "Arial", sans-serif;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
+         font-family: 'Arial', sans-serif;
+         margin: 0;
+         padding: 0;
+         display: flex;
+         flex-wrap: wrap;
+         justify-content: space-between;
       }
 
       #graph-container {
-        width: 48%;
-        height: 300px;
-        margin: 10px;
+         width: 48%;
+         height: 500px;
+         margin: 10px;
       }
 
       #tree-container {
-        width: 48%;
-        height: 300px;
-        margin: 10px;
-        position: relative;
+         width: 48%;
+         height: 650px;
+         margin: 10px;
+         position: relative;
+         overflow: auto;
       }
 
       .tree-progress {
-        position: absolute;
-        width: 50%;
-        height: 20px;
-        background-color: #f0f0f0;
-        top: 0;
-        left: 0;
+         position: absolute;
+         width: 50%;
+         height: 20px;
+         background-color: #f0f0f0;
+         top: 0;
+         left: 70px;
       }
+
       .progress-bar {
-        height: 100%;
-        background-color: #50a765;
+         height: 100%;
+         background-color: #50a765;
       }
-      .tooltip {
-        position: absolute;
-        background-color: #333;
-        color: #fff;
-        padding: 8px;
-        border-radius: 4px;
-        font-size: 14px;
+
+      .reset_btn {
+         position: absolute;
+         top: 0px;
+         left: 0px;
+         width: 40px;
+         border: 1px solid #4bc0c0;
+         padding: 10px 15px;
+         /* border-radius: 5px; */
+         background: #fff;
+         color: #212121;
+         font-size: 14px;
+         cursor: pointer;
+         font-weight: bold;
+         text-align: center;
+         text-decoration: none;
       }
+
+      .reset_btn:hover {
+         background: #4bc0c0;
+         color: #fff;
+      }
+
+      .radialChart {
+         position: absolute;
+         top: 100px;
+         left: 500px;
+      }
+
       #table-container {
-        width: 100%;
-        margin: 10px;
+         width: 100%;
+         margin: 10px;
       }
-    </style>
-  </head>
-  <body>
-    <!-- Graph Container -->
-    <div id="graph-container">
+
+      /* Reset some default styles */
+      table {
+         border-collapse: collapse;
+         /* width: 100%; */
+         margin-bottom: 20px;
+         font-size: 16px;
+      }
+
+      /* Header styles */
+      thead {
+         background-color: #f2f2f2;
+      }
+
+      th,
+      td {
+         padding: 12px;
+         text-align: left;
+         border-bottom: 1px solid #ddd;
+      }
+
+      /* Highlight the header row */
+      th {
+         background-color: #4bc0c0;
+         color: white;
+      }
+
+      /* Alternating row colors for better readability */
+      tbody tr:nth-child(even) {
+         background-color: #f9f9f9;
+      }
+
+      /* Hover effect on rows */
+      tbody tr:hover {
+         background-color: #e0f7fa;
+      }
+   </style>
+</head>
+
+<body>
+   <!-- Graph Container -->
+   <div id="graph-container">
       <canvas id="barGraph"></canvas>
-    </div>
+   </div>
 
-    <!-- Tree Container -->
-    <div id="tree-container">
+   <!-- Tree Container -->
+   <div id="tree-container">
       <!-- Progress Bar for Tree 1 -->
-      <div class="tree-progress" style="top: 0"></div>
+      <!-- <div class="tree-progress" style="top: 0;"></div> -->
+      <div class="reset_btn" onclick="resetTreeChart();">Reset</div>
+      <svg width="600" height="600" class="treeChart"></svg>
+
       <!-- Tree GUI will be generated dynamically using D3.js -->
-    </div>
+   </div>
 
-    <!-- Table Container -->
-    <div id="table-container">
-      <table border="1">
-        <thead>
-          <tr>
-            <th>UAV ID</th>
-            <th>SubGoals</th>
-          </tr>
-        </thead>
-        <tbody id="table-body">
-          <!-- Table rows will be generated dynamically using JavaScript -->
-        </tbody>
+   <!-- Table Container -->
+   <div id="table-container">
+      <table>
+         <thead>
+            <tr>
+               <th>UAV ID</th>
+               <th>SubGoals</th>
+            </tr>
+         </thead>
+         <tbody id="table-body">
+            <!-- Table rows will be generated dynamically using JavaScript -->
+         </tbody>
       </table>
-    </div>
-    <div id="table2-container">
+   </div>
+   <div id="table2-container">
       <h2>Table of Current Beliefs</h2>
-      <table border="1">
-        <thead>
-          <tr>
-            <th>Belief</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody id="table2-body">
-          <!-- Table rows will be generated dynamically using JavaScript -->
-        </tbody>
+      <table>
+         <thead>
+            <tr>
+               <th>Belief</th>
+               <th>Value</th>
+            </tr>
+         </thead>
+         <tbody id="table2-body">
+            <!-- Table rows will be generated dynamically using JavaScript -->
+         </tbody>
       </table>
-    </div>
-    <div id="intention-queue-table-container">
+   </div>
+   <div id="intention-queue-table-container">
       <h2>Intention Queue</h2>
-      <table border="1">
-        <thead>
-          <tr>
-            <th>Intention ID</th>
-            <th>Probability</th>
-            <th>Stack</th>
-          </tr>
-        </thead>
-        <tbody id="intention-queue-table-body">
-          <!-- Table rows will be generated dynamically using JavaScript -->
-        </tbody>
+      <table>
+         <thead>
+            <tr>
+               <th>Intention ID</th>
+               <th>Probability</th>
+               <th>Stack</th>
+            </tr>
+         </thead>
+         <tbody id="intention-queue-table-body">
+            <!-- Table rows will be generated dynamically using JavaScript -->
+         </tbody>
       </table>
-    </div>
+   </div>
 
-    <script>
-      const jsonData = {
-        goals: [
-          {
-            id: "G1",
-            description: "Goal 1",
-            numSubgoals: 3,
-          },
-          {
-            id: "G2",
-            description: "Goal 2",
-            numSubgoals: 3,
-          },
-          {
-            id: "G3",
-            description: "Goal 3",
-            numSubgoals: 3,
-          },
-          {
-            id: "G4",
-            description: "Goal 4",
-            numSubgoals: 3,
-          },
-        ],
-        currentBeliefs: {
-          belief1: "value1",
-          belief2: "value2",
-          belief3: "value3",
-        },
-        intentionQueue: [
-          {
-            intentionId: 1,
-            goalId: "G1",
-            probability: 0.2,
-            stack: [
-              {
-                triggerEvent: "SG11",
-                planBody: [
-                  {
-                    id: 1,
-                    description: "A1",
-                    responsible: "UAV1",
-                    type: "action",
-                  },
-                  {
-                    id: 2,
-                    description: "A2",
-                    responsible: "UAV1",
-                    type: "action",
-                  },
-                ],
-              },
-              {
-                triggerEvent: "G1",
-                planBody: [
-                  {
-                    id: 1,
-                    description: "SG11",
-                    responsible: "UAV1",
-                    type: "subgoal",
-                  },
-                  {
-                    id: 2,
-                    description: "SG12",
-                    responsible: "UAV2",
-                    type: "subgoal",
-                  },
-                  {
-                    id: 3,
-                    description: "SG13",
-                    responsible: "UAV3",
-                    type: "subgoal",
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            intentionId: 2,
-            goalId: "G2",
-            probability: 0.6,
-            stack: [
-              {
-                triggerEvent: "SG211",
-                planBody: [
-                  {
-                    id: 1,
-                    description: "B1",
-                    responsible: "UAV2",
-                    type: "action",
-                  },
-                  {
-                    id: 2,
-                    description: "B2",
-                    responsible: "UAV3",
-                    type: "action",
-                  },
-                ],
-              },
-              {
-                triggerEvent: "SG21",
-                planBody: [
-                  {
-                    id: 1,
-                    description: "SG211",
-                    responsible: "UAV2",
-                    type: "subgoal",
-                  },
-                ],
-              },
-              {
-                triggerEvent: "G2",
-                planBody: [
-                  {
-                    id: 1,
-                    description: "SG21",
-                    responsible: "UAV2",
-                    type: "subgoal",
-                  },
-                  {
-                    id: 2,
-                    description: "SG22",
-                    responsible: "UAV3",
-                    type: "subgoal",
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            intentionId: 4,
-            goalId: "G4",
-            probability: 0.3,
-            stack: [
-              {
-                triggerEvent: "SG11",
-                planBody: [
-                  {
-                    id: 1,
-                    description: "A1",
-                    responsible: "UAV1",
-                    type: "action",
-                  },
-                  {
-                    id: 2,
-                    description: "A2",
-                    responsible: "UAV1",
-                    type: "action",
-                  },
-                ],
-              },
-              {
-                triggerEvent: "G1",
-                planBody: [
-                  {
-                    id: 1,
-                    description: "SG11",
-                    responsible: "UAV1",
-                    type: "subgoal",
-                  },
-                  {
-                    id: 2,
-                    description: "SG12",
-                    responsible: "UAV2",
-                    type: "subgoal",
-                  },
-                  {
-                    id: 3,
-                    description: "SG13",
-                    responsible: "UAV3",
-                    type: "subgoal",
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            intentionId: 3,
-            goalId: "G3",
-            probability: 0.2,
-            stack: [
-              {
-                triggerEvent: "SG311",
-                planBody: [
-                  {
-                    id: 1,
-                    description: "C1",
-                    responsible: "UAV2",
-                    type: "action",
-                  },
-                  {
-                    id: 2,
-                    description: "C2",
-                    responsible: "UAV3",
-                    type: "action",
-                  },
-                ],
-              },
-              {
-                triggerEvent: "SG31",
-                planBody: [
-                  {
-                    id: 1,
-                    description: "SG311",
-                    responsible: "UAV2",
-                    type: "subgoal",
-                  },
-                ],
-              },
-              {
-                triggerEvent: "G3",
-                planBody: [
-                  {
-                    id: 1,
-                    description: "SG31",
-                    responsible: "UAV2",
-                    type: "subgoal",
-                  },
-                  {
-                    id: 2,
-                    description: "SG32",
-                    responsible: "UAV3",
-                    type: "subgoal",
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
-      // Sample data for the graph
-      const graphData = {
-        labels: jsonData.intentionQueue.map(
-          (intention) => `Intension ID ${intention.intentionId}`
-        ),
-        datasets: [
-          {
-            label: "Probability",
-            data: jsonData.intentionQueue.map(
-              (intention) => intention.probability
-            ),
-            backgroundColor: "rgba(75, 192, 192, 0.2)",
-            borderColor: "rgba(75, 192, 192, 1)",
-            borderWidth: 1,
-          },
-        ],
-      };
 
-      // Sample data for the tree
-      const treeData = [
-        { id: "G1", progress: 35, children: ["SG11", "SG12", "SG13"] },
-        { id: "G2", progress: 80, children: ["SG21", "SG22", "SG23"] },
-        // More tree data can be added dynamically
-      ];
 
+   <script>
+      let jsonData = {};
+      let graphData;
+      let treeData
+      const nodeSize = 50;
       // Sample data for the table
       const tableData = [
-        { uavId: "UAV1", subGoals: ["SG11", "SG12"] },
-        { uavId: "UAV2", subGoals: ["SG21", "SG23"] },
-        // More table data can be added dynamically
+         { uavId: 'UAV1', subGoals: ['SG11', 'SG12'] },
+         { uavId: 'UAV2', subGoals: ['SG21', 'SG23'] }
+         // More table data can be added dynamically
       ];
-
-      // Function to create the bar graph
-      function createBarGraph() {
-        const ctx = document.getElementById("barGraph").getContext("2d");
-        const barGraph = new Chart(ctx, {
-          type: "bar",
-          data: graphData,
-          options: {
-            scales: {
-              x: { type: "category", labels: graphData.labels },
-              y: { beginAtZero: true },
-            },
-            onClick: handleBarClick,
-          },
-        });
-
-        function handleBarClick(event, elements) {
-          if (elements && elements.length > 0) {
-            const index = elements[0].index;
-            const clickedIntention = jsonData.intentionQueue[index];
-            const message = `Clicked on Intention ID ${clickedIntention.intentionId}\nGoal ID: ${clickedIntention.goalId}\nProbability: ${clickedIntention.probability}`;
-            // alert(message);
-            createTree2(clickedIntention.goalId);
-          }
-        }
-      }
-
-      //my function start
-
-      //   function convertToTree(intention) {
-      //     return {
-      //       name: intention.goalId,
-      //       children: intention.stack.map((stackItem) => ({
-      //         name: stackItem.triggerEvent,
-      //       })),
-      //     };
-      //   }
-
-      function createTree2(id) {
-        console.log(id, "id");
-        // const intentionQueue = jsonData.intentionQueue.map((_el) => {
-        //   console.log(_el, "vimal"),
-        //     _el.stack.map((_item) => {
-        //       _item.triggerEvent;
-        //       console.log(_item, "_item"),
-        //         _item.planBody.map((_value) => {
-        //           jsonData.intentionQueue?.stack?.map((_check) => {
-        //             if (_check.triggerEvent === _value.description) {
-        //               console.log(_value, "_value");
-        //             }
-        //           });
-        //         });
-        //     });
-        // });
-
-        // const part = jsonData.intentionQueue
-        //   .filter((intention) => intention.goalId === id)
-        //   .map((intention) => intention.stack.length)[0];
-
-        // const total = jsonData.goals
-        //   .filter((gols) => gols.id === id)
-        //   .map((_el) => _el.numSubgoals);
-        // console.log(part, total[0], "prograss");
-        // const percentage = ((part / total[0]) * 100).toString() + "%";
-
-        const calculatePart = (intentionQueue, goalId) => {
-          const matchingIntentions = intentionQueue.filter(
-            (intention) => intention.goalId === goalId
-          );
-          return matchingIntentions.length > 0
-            ? matchingIntentions[0].stack.length
-            : 0;
-        };
-
-        // Function to calculate total value
-        const calculateTotal = (goals, goalId) => {
-          const matchingGoal = goals.find((goal) => goal.id === goalId);
-          return matchingGoal ? matchingGoal.numSubgoals : 0;
-        };
-
-        // Replace 'id' with the actual goalId you are interested in
-
-        // Calculate part and total values
-        const part = calculatePart(jsonData.intentionQueue, id);
-        const total = calculateTotal(jsonData.goals, id);
-
-        // Calculate percentage
-        const percentage =
-          total !== 0 ? ((part / total) * 100).toFixed(2) + "%" : "0%";
-
-        // Log or use the calculated values
-        console.log(part, total, percentage, "progress");
-
-        console.log(percentage, "percentage");
-        const d3TreeData = jsonData.intentionQueue.map((intention) => {
-          const { goalId, stack } = intention;
-
-          const children = stack.map((stackItem) => {
-            const { triggerEvent, planBody } = stackItem;
-
-            const subgoals = planBody
-              .filter((bodyItem) => {
-                return bodyItem.type === "action";
-              })
-              .map((bodyItem) => {
-                const { id, description, type } = bodyItem;
-                return { name: description, id, type };
-              });
-
-            return { name: triggerEvent, children: subgoals };
-          });
-
-          return { name: goalId, children };
-        });
-
-        const filteredD3TreeData = d3TreeData.filter(
-          (node) => node.name === id
-        );
-
-        console.log(filteredD3TreeData);
-
-        console.log(filteredD3TreeData, "filteredD3TreeData");
-
-        // Set up the D3 tree layout
-
-        const treeData2 = jsonData.intentionQueue
-          .filter((intention) => intention.goalId === id)
-          .map((intention) => ({
-            name: intention.goalId,
-            children: intention.stack.map((stackItem) => ({
-              name: stackItem.triggerEvent,
-              description: stackItem.planBody.map(
-                (planItem) => planItem.description
-              ),
-            })),
-          }));
-
-        const treeContainer = document.getElementById("tree-container");
-        // Clear existing content in the tree container
-        treeContainer.innerHTML = "";
-
-        const tree = d3.tree().size([300, 300]);
-        const rootData = { name: percentage, children: filteredD3TreeData }; // Added a root node
-
-        const root = d3.hierarchy(rootData);
-
-        tree(root);
-
-        // Draw Progress Bar for Tree 1
-        const progressBar1 = document.createElement("div");
-        progressBar1.classList.add("tree-progress");
-        treeContainer.appendChild(progressBar1);
-
-        const progressBar1Fill = document.createElement("div");
-        progressBar1Fill.classList.add("progress-bar");
-        progressBar1Fill.style.width = percentage;
-        progressBar1.appendChild(progressBar1Fill);
-
-        const svg = d3
-          .select(treeContainer)
-          .append("svg")
-          .attr("width", 400)
-          .attr("height", 400);
-
-        const g = svg.append("g").attr("transform", "translate(50,50)");
-
-        // Draw lines for all links
-        g.selectAll("line")
-          .data(root.links())
-          .enter()
-          .append("line")
-          .attr("x1", (d) => d.source.x)
-          .attr("y1", (d) => d.source.y)
-          .attr("x2", (d) => d.target.x)
-          .attr("y2", (d) => d.target.y)
-          .attr("stroke", "black");
-
-        // Draw circles for all nodes
-        g.selectAll("circle")
-          .data(root.descendants())
-          .enter()
-          .append("circle")
-          .attr("cx", (d) => d.x)
-          .attr("cy", (d) => d.y)
-          .attr("r", 15)
-          .attr("fill", "#add8e6")
-          .on("mouseover", function (event, d) {
-            // Check if the circle is the last one
-            const isLastCircle = d.children === undefined;
-
-            if (isLastCircle) {
-              // Apply your hover effect here
-              function isDescriptionPresent(selectedDescription) {
-                return jsonData.intentionQueue.some((intention) =>
-                  intention.stack.some((stackItem) =>
-                    stackItem.planBody.some(
-                      (planItem) =>
-                        planItem.description === selectedDescription ||
-                        stackItem.triggerEvent === selectedDescription
-                    )
-                  )
-                );
-              }
-
-              // Example usage
-              const values = d.data.name;
-              const isPresent = isDescriptionPresent(values);
-
-              if (isPresent) {
-                // Create a tooltip element
-                const tooltip = document.createElement("div");
-                tooltip.classList.add("tooltip");
-
-                // Extract description and responsible values using reduce
-                const tooltipValues = jsonData.intentionQueue.reduce(
-                  (acc, intention) => {
-                    const matchingStackItem = intention.stack.find(
-                      (stackItem) =>
-                        stackItem.planBody.some(
-                          (planItem) => planItem.description === values
-                        )
-                    );
-
-                    if (matchingStackItem) {
-                      acc.push(
-                        ...matchingStackItem.planBody
-                          .filter((planItem) => planItem.description === values)
-                          .map((planItem) => {
-                            return {
-                              description: planItem.description,
-                              responsible: planItem.responsible,
-                            };
-                          })
-                      );
-                    }
-
-                    return acc;
-                  },
-                  []
-                );
-
-                console.log(tooltipValues, "tooltipValues");
-
-                // Build the tooltip content
-                const tooltipContent = tooltipValues
-                  .map((item) => ` ${item.responsible}`)
-                  .join(", ");
-
-                tooltip.textContent = tooltipContent;
-
-                // Position the tooltip
-                const rect = this.getBoundingClientRect();
-                tooltip.style.left = rect.left + window.scrollX + "px";
-                tooltip.style.top = rect.top + window.scrollY - 30 + "px"; // Adjust as needed
-
-                // Append the tooltip to the body
-                document.body.appendChild(tooltip);
-
-                // Remove the tooltip when the mouse leaves
-                this.addEventListener("mouseout", function () {
-                  document.body.removeChild(tooltip);
-                });
-              }
-            }
-          });
-
-        // Draw text labels for all nodes
-        g.selectAll("text")
-          .data(root.descendants())
-          .enter()
-          .append("text")
-          .attr("x", (d) => d.x)
-          .attr("y", (d) => d.y)
-          .attr("dy", "0.31em")
-          .attr("text-anchor", "middle")
-          .text((d) => d.data.name);
-      }
-      // Call the function to create the tree
-      // createTree();
-
-      //end
-      // Function to create the tree using D3.js
-      // function createTree() {
-      //   const treeContainer = document.getElementById("tree-container");
-
-      //   const tree = d3.tree().size([300, 300]);
-      //   const root = d3.hierarchy({ children: treeData });
-
-      //   tree(root);
-
-      //   // Draw Progress Bar for Tree 1
-      //   const progressBar1 = document.createElement("div");
-      //   progressBar1.classList.add("tree-progress");
-      //   treeContainer.appendChild(progressBar1);
-
-      //   const progressBar1Fill = document.createElement("div");
-      //   progressBar1Fill.classList.add("progress-bar");
-      //   progressBar1Fill.style.width = `${treeData[0].progress}%`;
-      //   progressBar1.appendChild(progressBar1Fill);
-
-      //   const svg = d3
-      //     .select(treeContainer)
-      //     .append("svg")
-      //     .attr("width", 400)
-      //     .attr("height", 400);
-      //   const g = svg.append("g").attr("transform", "translate(50,50)");
-
-      //   // Draw lines
-      //   g.selectAll("line")
-      //     .data(root.links())
-      //     .enter()
-      //     .append("line")
-      //     .attr("x1", (d) => d.source.x)
-      //     .attr("y1", (d) => d.source.y)
-      //     .attr("x2", (d) => d.target.x)
-      //     .attr("y2", (d) => d.target.y)
-      //     .attr("stroke", "black");
-
-      //   // Draw circles
-      //   g.selectAll("circle")
-      //     .data(root.descendants())
-      //     .enter()
-      //     .append("circle")
-      //     .attr("cx", (d) => d.x)
-      //     .attr("cy", (d) => d.y)
-      //     .attr("r", 10)
-      //     .attr("fill", "#add8e6"); // Light blue color
-
-      //   // Draw text labels
-      //   g.selectAll("text")
-      //     .data(root.descendants())
-      //     .enter()
-      //     .append("text")
-      //     .attr("x", (d) => d.x)
-      //     .attr("y", (d) => d.y)
-      //     .attr("dy", "0.31em")
-      //     .attr("text-anchor", "middle")
-      //     .text((d) => d.data.id);
-      // }
-
-      // Function to create the table
       function createTable() {
-        const tableBody = document.getElementById("table-body");
+         const tableBody = document.getElementById('table-body');
 
-        tableData.forEach((row) => {
-          const tableRow = document.createElement("tr");
-          const uavIdCell = document.createElement("td");
-          const subGoalsCell = document.createElement("td");
+         tableData.forEach(row => {
+            const tableRow = document.createElement('tr');
+            const uavIdCell = document.createElement('td');
+            const subGoalsCell = document.createElement('td');
 
-          uavIdCell.textContent = row.uavId;
-          subGoalsCell.textContent = row.subGoals.join(", ");
+            uavIdCell.textContent = row.uavId;
+            subGoalsCell.textContent = row.subGoals.join(', ');
 
-          tableRow.appendChild(uavIdCell);
-          tableRow.appendChild(subGoalsCell);
+            tableRow.appendChild(uavIdCell);
+            tableRow.appendChild(subGoalsCell);
 
-          tableBody.appendChild(tableRow);
-        });
+            tableBody.appendChild(tableRow);
+         });
       }
 
       function createTable2() {
-        const tableBody = document.getElementById("table2-body");
-        const currentBeliefs = jsonData.currentBeliefs;
-        console.log("In Create TABLE");
-        // Fetch data from the local JSON file
-        tableBody.innerHTML = "";
+         const tableBody = document.getElementById('table2-body');
+         const currentBeliefs = jsonData.currentBeliefs;
+         console.log("In Create TABLE");
+         // Fetch data from the local JSON file
+         tableBody.innerHTML = '';
 
-        // Loop through currentBeliefs and create table rows
-        for (const belief in currentBeliefs) {
-          if (currentBeliefs.hasOwnProperty(belief)) {
-            const tableRow = document.createElement("tr");
-            const beliefCell = document.createElement("td");
-            const valueCell = document.createElement("td");
+         // Loop through currentBeliefs and create table rows
+         for (const belief in currentBeliefs) {
+            if (currentBeliefs.hasOwnProperty(belief)) {
+               const tableRow = document.createElement('tr');
+               const beliefCell = document.createElement('td');
+               const valueCell = document.createElement('td');
 
-            beliefCell.textContent = belief;
-            valueCell.textContent = currentBeliefs[belief];
+               beliefCell.textContent = belief;
+               valueCell.textContent = currentBeliefs[belief];
 
-            tableRow.appendChild(beliefCell);
-            tableRow.appendChild(valueCell);
+               tableRow.appendChild(beliefCell);
+               tableRow.appendChild(valueCell);
 
-            tableBody.appendChild(tableRow);
-          }
-        }
+               tableBody.appendChild(tableRow);
+            }
+         }
       }
+
       function createIntentionQueueTable() {
-        const tableBody = document.getElementById("intention-queue-table-body");
+         const tableBody = document.getElementById('intention-queue-table-body');
 
-        // Create a table row for each intention in the intentionQueue
-        jsonData.intentionQueue.forEach((intention) => {
-          const tableRow = document.createElement("tr");
+         // Create a table row for each intention in the intentionQueue
+         jsonData.intentionQueue.forEach(intention => {
+            const tableRow = document.createElement('tr');
 
-          // Intention ID column
-          const intentionIdCell = document.createElement("td");
-          intentionIdCell.textContent = intention.intentionId;
-          tableRow.appendChild(intentionIdCell);
+            // Intention ID column
+            const intentionIdCell = document.createElement('td');
+            intentionIdCell.textContent = intention.intentionId;
+            tableRow.appendChild(intentionIdCell);
 
-          // Probability column
-          const probabilityCell = document.createElement("td");
-          probabilityCell.textContent = intention.probability;
-          tableRow.appendChild(probabilityCell);
+            // Probability column
+            const probabilityCell = document.createElement('td');
+            probabilityCell.textContent = intention.probability;
+            tableRow.appendChild(probabilityCell);
 
-          // Stack column
-          const stackCell = document.createElement("td");
-          const formattedStack = formatStack(intention.stack);
-          stackCell.textContent = formattedStack;
-          tableRow.appendChild(stackCell);
+            // Stack column
+            const stackCell = document.createElement('td');
+            const formattedStack = formatStack(intention.stack);
+            stackCell.textContent = formattedStack;
+            tableRow.appendChild(stackCell);
 
-          // Append the table row to the table body
-          tableBody.appendChild(tableRow);
-        });
+            // Append the table row to the table body
+            tableBody.appendChild(tableRow);
+         });
       }
 
       // Helper function to format the stack
       function formatStack(stack) {
-        return stack
-          .map((stackItem) => {
-            const planBodyDescriptions = stackItem.planBody
-              .map((bodyItem) => {
-                return `${bodyItem.description} (${bodyItem.responsible})`;
-              })
-              .join("; ");
+         return stack.map(stackItem => {
+            const planBodyDescriptions = stackItem.planBody.map(bodyItem => {
+               return `${bodyItem.description} (${bodyItem.responsible})`;
+            }).join('; ');
 
             return `${stackItem.triggerEvent} <- ${planBodyDescriptions}`;
-          })
-          .join(", ");
+         }).join(', ');
       }
 
-      // Call the createIntentionQueueTable function to populate the table
-      createIntentionQueueTable();
-      // Call the createTable2 function to populate the table
+      function resetTreeChart() {
+         createTreeVertical(treeData);
+         // console.log(treeData)
+         const radialChart = radialProgress(d3.select('g#' + treeData.id), treeData);
+      }
 
-      //function createTable2() {
-      //    const tableBody = document.getElementById('table2-body');
+      function radialProgress(selector, oldDATA) {
+         const svg = selector;
 
-      // Fetch data from the local JSON file
-      //    fetch('path/to/your/local/data.json')
-      //        .then(response => response.json())
-      //        .then(jsonData => {
-      //            const currentBeliefs = jsonData.currentBeliefs;
+         const data = selector.data();
+         let updateData = []
+         if (oldDATA.id != 'Root') {
+            updateData = [1]
+         } else {
+            updateData = [];
+         }
 
-      // Clear existing table rows
-      //            tableBody.innerHTML = '';
 
-      // Loop through currentBeliefs and create table rows
-      //            for (const belief in currentBeliefs) {
-      //                if (currentBeliefs.hasOwnProperty(belief)) {
-      //                    const tableRow = document.createElement('tr');
-      //                    const beliefCell = document.createElement('td');
-      //                    const valueCell = document.createElement('td');
+         // console.log(parent);
+         // const size = svg.node().getBoundingClientRect()         
+         // const svg = parent.append('svg')
+         //    .attr('width', size.width)
+         //    .attr('height', nodeSize);
+         const outerRadius = Math.min(nodeSize, nodeSize) * 0.60;
+         const thickness = 5;
+         let value = 0;
 
-      //                    beliefCell.textContent = belief;
-      //                    valueCell.textContent = currentBeliefs[belief];
+         const mainArc = d3.arc()
+            .startAngle(0)
+            .endAngle(Math.PI * 2)
+            .innerRadius(outerRadius - thickness)
+            .outerRadius(outerRadius)
 
-      //                    tableRow.appendChild(beliefCell);
-      //                    tableRow.appendChild(valueCell);
+         const pathParent = svg.selectAll('path.progress-bar-bg').data(updateData);
+         pathParent.exit().remove();
+         const path = pathParent.enter().append("path")
+            .merge(pathParent)
+            .attr('class', 'progress-bar-bg')
+            .attr('transform', `translate(${0},${0})`)
+            .attr('fill', '#DDD')
+            .attr('d', mainArc());
 
-      //                    tableBody.appendChild(tableRow);
-      //                }
-      //            }
-      //        })
-      //        .catch(error => {
-      //            console.error('Error fetching data:', error);
-      //        });
-      //}
-      // Call the functions to create the components
-      createBarGraph();
-      createTree();
-      // createTree();
-      createTable();
-      createTable2();
-    </script>
-  </body>
+         const mainArcPathPrent = svg.selectAll('path.progress-bar').data(updateData);
+         mainArcPathPrent.exit().remove();
+         const mainArcPath = mainArcPathPrent.enter()
+            .append("path")
+            .merge(mainArcPathPrent)
+            .attr('class', 'progress-bar')
+            .attr('fill', '#4bc0c0')
+            .attr('transform', `translate(${0},${0})`)
+
+         // const circleParent = svg.selectAll('circle.progress-bar').data(updateData);
+         // circleParent.exit().remove();
+         // const circle = circleParent.enter()
+         //    .append("circle")
+         //    .merge(circleParent)
+         //    .attr('class', 'progress-bar')
+         //    .attr('fill', '#ddd')
+         //    .attr('transform', `translate(${nodeSize / 2},${nodeSize / 2 - outerRadius + thickness / 2})`)
+         //    .attr('width', thickness)
+         //    .attr('height', thickness)
+         //    .attr('r', thickness / 2)
+
+
+         // const endParent = svg.selectAll('circle.progress-bar-main').data(updateData);
+         // endParent.exit().remove();
+         // const end = endParent.enter()
+         //    .append("circle")
+         //    .merge(endParent)
+         //    .attr('class', 'progress-bar-main')
+         //    .attr('transform', `translate(${nodeSize / 2},${nodeSize / 2 - outerRadius + thickness / 2})`)
+         //    .attr('width', thickness)
+         //    .attr('height', thickness)
+         //    .attr('fill', '#ddd')
+         //    .attr('r', thickness / 2)
+
+         const percentLabelParent = svg.selectAll('text.progress-label').data(updateData);
+         percentLabelParent.exit().remove();
+         let percentLabel = percentLabelParent.enter()
+            .append("text")
+            .merge(percentLabelParent)
+            .attr('class', 'progress-label')
+            .attr('transform', `translate(${nodeSize / 2 + 5},${7.5})`)
+            .style('font-size', '12px')
+
+
+         return {
+            update: function (progressPercent) {
+               const startValue = value
+               const startAngle = Math.PI * startValue / 50
+               const angleDiff = Math.PI * progressPercent / 50 - startAngle;
+               const startAngleDeg = startAngle / Math.PI * 180
+               const angleDiffDeg = angleDiff / Math.PI * 180
+               const transitionDuration = 500;
+               // console.log(mainArcPath, 'mainArcPath');
+
+               mainArcPath.transition().duration(transitionDuration).attrTween('d', function () {
+                  return function (t) {
+                     mainArc.endAngle(startAngle + angleDiff * t)
+                     return mainArc();
+                  }
+               })
+               // end.transition().duration(transitionDuration).attrTween('transform', function () {
+               //    return function (t) {
+               //       return `translate(${nodeSize / 2},${nodeSize / 2})` +
+               //          `rotate(${(startAngleDeg + angleDiffDeg * t)})` +
+               //          `translate(0,-${outerRadius - thickness / 2})`
+               //    }
+               // })
+               percentLabel.text(progressPercent + '% ')
+
+               value = progressPercent
+            }
+         }
+      }
+      // Function to create the bar graph
+      function createBarGraph() {
+         const ctx = document.getElementById('barGraph').getContext('2d');
+         const barGraph = new Chart(ctx, {
+            type: 'bar',
+            data: graphData,
+            options: {
+               scales: {
+                  x: { type: 'category', labels: graphData.labels },
+                  y: { beginAtZero: true }
+               },
+               onClick: handleBarClick
+            }
+         });
+
+         function handleBarClick(event, elements) {
+            if (elements && elements.length > 0) {
+               const index = elements[0].index;
+               const clickedIntention = jsonData.intentionQueue[index];
+               const message = `Clicked on Intention ID ${clickedIntention.intentionId}\nGoal ID: ${clickedIntention.goalId}\nProbability: ${clickedIntention.probability}`;
+
+               const filteredData = treeData.children.filter(child => child.id === clickedIntention.goalId);
+               createTreeVertical(filteredData[0]);
+               // console.log(filteredData[0]);
+
+
+
+               const radialChart = radialProgress(d3.select('g#' + filteredData[0].id), filteredData[0]);
+
+               radialChart.update(filteredData[0].data.performance);
+
+               // alert(message);
+            }
+         }
+      }
+
+
+      // Function to create the tree using D3.js
+      function createTree() {
+         const treeContainer = document.getElementById('tree-container');
+
+         const tree = d3.tree().size([300, 300]);
+         const root = d3.hierarchy({ children: treeData });
+
+
+         tree(root);
+
+
+         // Draw Progress Bar for Tree 1
+         const progressBar1 = document.createElement('div');
+         progressBar1.classList.add('tree-progress');
+         treeContainer.appendChild(progressBar1);
+
+         const progressBar1Fill = document.createElement('div');
+         progressBar1Fill.classList.add('progress-bar');
+         progressBar1Fill.style.width = `${treeData[0].progress}%`;
+         progressBar1.appendChild(progressBar1Fill);
+
+         const svg = d3.select(treeContainer).append('svg').attr('width', 400).attr('height', 400);
+         const g = svg.append('g').attr('transform', 'translate(50,50)');
+
+         // Draw lines
+         g.selectAll('line')
+            .data(root.links())
+            .enter().append('line')
+            .attr('x1', d => d.source.x)
+            .attr('y1', d => d.source.y)
+            .attr('x2', d => d.target.x)
+            .attr('y2', d => d.target.y)
+            .attr('stroke', 'black');
+
+         // Draw circles
+         g.selectAll('circle')
+            .data(root.descendants())
+            .enter().append('circle')
+            .attr('cx', d => d.x)
+            .attr('cy', d => d.y)
+            .attr('r', 10)
+            .attr('fill', '#add8e6'); // Light blue color
+
+         // Draw text labels
+         g.selectAll('text')
+            .data(root.descendants())
+            .enter().append('text')
+            .attr('x', d => d.x)
+            .attr('y', d => d.y)
+            .attr('dy', '0.31em')
+            .attr('text-anchor', 'middle')
+            .text(d => d.data.id);
+      }
+
+      function createTreeVertical(data) {
+         const treeContainer = document.getElementById('tree-container');
+         const SVGEle = d3.select(treeContainer).select('svg.treeChart').node();
+
+
+         // declares a tree layout and assigns the size
+         let treemap = d3.tree().size([SVGEle.clientWidth - 50, SVGEle.clientHeight - 80]);
+
+         //  assigns the data to a hierarchy using parent-child relationships
+         let nodes = d3.hierarchy(data, function (d) {
+            return d.children;
+         });
+
+
+         if (nodes.data.id != 'Root') {
+            treemap = d3.tree().size([SVGEle.clientWidth - 50, SVGEle.clientHeight - 80]);
+            nodes.children.forEach(unCollapse);
+         } else {
+            treemap = d3.tree().size([SVGEle.clientWidth - 50, 100]);
+            nodes.children.forEach(collapse);
+         }
+         console.log(nodes, 'children')
+
+         // maps the node data to the tree layout
+         nodes = treemap(nodes);
+
+         // append the svg object to the body of the page
+         // appends a 'group' element to 'svg'
+         // moves the 'group' element to the top left margin
+         const svg = d3.select(treeContainer).select('svg.treeChart');
+         const mainG = svg.selectAll('g.mainG').data([1]);
+         mainG.exit().remove();
+         const g = mainG.enter().append("g")
+            .merge(mainG)
+            .attr('class', 'mainG')
+            .attr("transform", "translate(50, 50)");
+         const linkG = g.selectAll('g.linkG').data([1]);
+         linkG.exit().remove();
+         const updateLinkG = linkG.enter().append("g")
+            .merge(linkG)
+            .attr('class', 'linkG');
+
+         // adds the links between the nodes
+         const link = updateLinkG.selectAll(".link").data(nodes.descendants().slice(1));
+         link.exit().remove();
+         link.enter().append("path")
+            .merge(link)
+            .attr("class", "link")
+            .attr("d", function (d) {
+               return "M" + d.x + "," + d.y
+                  + "C" + d.x + "," + (d.y + d.parent.y) / 2
+                  + " " + d.parent.x + "," + (d.y + d.parent.y) / 2
+                  + " " + d.parent.x + "," + d.parent.y;
+            })
+            .attr("fill", "none")
+            .attr("stroke", "#ccc");
+
+         // adds each node as a group
+         const node = g.selectAll(".node").data(nodes.descendants());
+         node.exit().remove();
+         const NodeEnter = node.enter().append("g")
+            .merge(node)
+            .attr("id", function (d) {
+
+               return d.data.id;
+            })
+            .attr("class", function (d) {
+               return "node" +
+                  (d.children ? " node--internal" : " node--leaf");
+            })
+            .attr("transform", function (d) {
+               return "translate(" + d.x + "," + d.y + ")";
+            });
+
+         // adds the circle to the node
+         const circle = NodeEnter.selectAll('circle').data(d => [d]);
+         circle.exit().remove();
+         circle.enter().append('circle')
+            .merge(circle)
+            .attr("r", (d) => { return d.depth === 0 ? nodeSize / 2 : 15 })
+            .attr("fill", "#dbf2f2")
+            .attr("stroke", "#4bc0c0");
+
+         // adds the text to the node
+         const text = NodeEnter.selectAll('text.node-text').data(d => [d]);
+         text.exit().remove();
+         text.enter().append("text")
+            .merge(text)
+            .attr('class', 'node-text')
+            .attr("dy", ".35em")
+            // .attr("y", function (d) { return d.children ? -20 : 20; }) // Adjust positioning based on circle radius
+            .style("text-anchor", "middle") // Center text
+            .text((d) => d.data.data.childName)
+            .style('font-size', '10px');
+
+         const subText = NodeEnter.selectAll('text.sub-text').data(d => [d]);
+         subText.exit().remove();
+         subText.enter().append("text")
+            .merge(subText)
+            .attr('class', 'sub-text')
+            .attr("dy", ".35em")
+            .attr("y", 20) // Adjust positioning based on circle radius
+            .style("text-anchor", "middle") // Center text
+            .text((d) => d.data.data.responsible ? `(${d.data.data.responsible})` : '')
+            .style('font-size', '9px');
+
+         node.merge(NodeEnter)
+            .attr("transform", function (d) {
+               return "translate(" + d.x + "," + d.y + ")";
+            });
+
+         circle.merge(NodeEnter.select('circle'));
+         text.merge(NodeEnter.select('text'));
+
+         // const radiusCricleG = NodeEnter.selectAll('g.adiusCricleG').data(d => [d]);
+         // circle.exit().remove();
+         // circle.enter().append('circle')
+         //    .merge(circle)
+         //    .attr("r", 15)
+         //    .attr("fill", "#fff")
+         //    .attr("stroke", "#ccc");
+      }
+      function convertToJsonForGraph(jsonData) {
+         const flatData = [{ parentName: null, childName: "Root" }];
+
+         jsonData.intentionQueue.forEach((d) => {
+            targetGoal = jsonData.goals.find((goal) => goal.id === d.goalId);
+            actualGoalObj = d.stack.find((e) => e.triggerEvent === d.goalId);
+            targetGoals = targetGoal ? targetGoal.numSubgoals : 0;
+            actualGoal = actualGoalObj ? actualGoalObj.planBody.length : 0;
+            performance = targetGoals ? (actualGoal / targetGoals * 100) : targetGoals;
+            performance = performance % 1 === 0 ? performance.toFixed(0) : performance.toFixed(2);
+
+            flatData.push({ parentName: "Root", childName: d.goalId, performance: performance });
+            if (d.stack && d.stack.length) {
+               d.stack.forEach((stackItem) => {
+                  if (stackItem.planBody && stackItem.planBody.length) {
+                     stackItem.planBody.forEach((planItem) => {
+                        const myObj = {
+                           "intentionId": d.intentionId,
+                           "goalId": d.goalId,
+                           "probability": d.probability,
+                           "triggerEvent": stackItem.triggerEvent,
+                           "parentName": stackItem.triggerEvent,
+                           "childName": planItem.description,
+                           "description": planItem.description,
+                           "responsible": planItem.responsible,
+                           "type": planItem.type
+                        };
+                        flatData.push(myObj)
+                     })
+                  }
+               })
+            }
+
+
+         });
+
+         const treeData = d3.stratify()
+            .id(function (d) { return d.childName; })
+            .parentId(function (d) { return d.parentName; })
+            (flatData);
+
+         return treeData;
+      }
+
+      function collapse(d) {
+         if (d.children) {
+            d._children = d.children
+            d._children.forEach(collapse)
+            d.children = null
+         }
+      }
+      function unCollapse(d) {
+         if (d._children) {
+            d.children = d._children
+            d.children.forEach(collapse)
+            d._children = null
+         }
+
+      }
+
+      d3.json("Goal-Based-Dashboard.json").then((d) => {
+
+         jsonData = d;
+         // sort data base on intentionId value 
+         jsonData.intentionQueue.sort((a, b) => a.intentionId - b.intentionId);
+
+         graphData = {
+            labels: jsonData.intentionQueue.map(intention => `Intension ID ${intention.intentionId}`),
+            datasets: [{
+               label: 'Probability',
+               data: jsonData.intentionQueue.map(intention => intention.probability),
+               backgroundColor: 'rgba(75, 192, 192, 0.2)',
+               borderColor: 'rgba(75, 192, 192, 1)',
+               borderWidth: 1
+            }]
+         };
+
+
+         // Sample data for the tree
+         // const treeData = [
+         //    { id: 'G1', type: 'Parent', progress: 35, children: ['SG11', 'SG12', 'SG13'] },
+         //    { id: 'G2', type: 'Parent', progress: 80, children: ['SG21', 'SG22', 'SG23'] },
+         //    { id: 'SG11', type: 'First Child', progress: 100, children: ['A1', 'A2'] },
+         //    // More tree data can be added dynamically
+         // ];
+
+         const graphJsonData = convertToJsonForGraph(jsonData);
+         graphJsonData.children.sort((a, b) => a.id.localeCompare(b.id));
+         treeData = graphJsonData;
+
+
+
+
+         // Call the createIntentionQueueTable function to populate the table
+         createIntentionQueueTable();
+         // Call the createTable2 function to populate the table
+
+         //function createTable2() {
+         //    const tableBody = document.getElementById('table2-body');
+
+         // Fetch data from the local JSON file
+         //    fetch('path/to/your/local/data.json')
+         //        .then(response => response.json())
+         //        .then(jsonData => {
+         //            const currentBeliefs = jsonData.currentBeliefs;
+
+         // Clear existing table rows
+         //            tableBody.innerHTML = '';
+
+         // Loop through currentBeliefs and create table rows
+         //            for (const belief in currentBeliefs) {
+         //                if (currentBeliefs.hasOwnProperty(belief)) {
+         //                    const tableRow = document.createElement('tr');
+         //                    const beliefCell = document.createElement('td');
+         //                    const valueCell = document.createElement('td');
+
+         //                    beliefCell.textContent = belief;
+         //                    valueCell.textContent = currentBeliefs[belief];
+
+         //                    tableRow.appendChild(beliefCell);
+         //                    tableRow.appendChild(valueCell);
+
+         //                    tableBody.appendChild(tableRow);
+         //                }
+         //            }
+         //        })
+         //        .catch(error => {
+         //            console.error('Error fetching data:', error);
+         //        });
+         //}
+         // Call the functions to create the components
+
+
+         createBarGraph();
+         // createTree();
+         // createTree();
+         // createTreeHorizontal();
+         createTreeVertical(treeData);
+         createTable();
+         createTable2();
+      });
+   </script>
+</body>
+
 </html>
